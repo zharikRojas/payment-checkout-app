@@ -19,3 +19,7 @@ coverage/
 
 # Local agent notes (do not publish)
 AGENTS.md
+
+# Vite / Nest
+.vite/
+*.tsbuildinfo
