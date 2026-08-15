@@ -1,0 +1,30 @@
+---
+description: Núcleo del proyecto payment-checkout-app — idioma, SDD privado, alcance y stack
+alwaysApply: true
+---
+
+# Project core
+
+## Comunicación
+- Responde siempre en **español**.
+- Sé directo y corto. Sin relleno.
+
+## Spec privada (NO subir)
+- SRS/SDD/fases/enunciado viven en `.cursor/sdd/` (gitignored).
+- **Nunca** commits de `.cursor/sdd/`, keys, `.env`, ni el nombre de la empresa pasarela en el repo público.
+- Antes de codear features, lee la fase activa en `.cursor/sdd/03-fases.md` y decisiones en `.cursor/sdd/01-requerimientos.md`.
+
+## Stack congelado
+- Monorepo: `apps/web` (React + Vite + TS + Redux Toolkit) + `apps/api` (NestJS + Prisma + PostgreSQL).
+- Guest checkout (sin login de comprador).
+- UI en español. Fees fijos server-side. Reserva de stock en PENDING.
+- Coverage meta: ≥85% lines por app. Every PR targets base `development` (`main` = release only).
+
+## Skills obligatorias
+- Coding: leer y seguir `.cursor/skills/ponytail/SKILL.md`
+- Por fases: `.cursor/skills/phase-workflow/SKILL.md`
+- Seguridad: `.cursor/skills/owasp-top10/SKILL.md`
+- Commits: `.cursor/skills/commit-gate/SKILL.md` — **proponer y esperar OK del usuario**
+
+## Deadline
+Entrega antes del 2026-08-18 08:00. Preferir cerrar fase actual sobre scope nuevo.
