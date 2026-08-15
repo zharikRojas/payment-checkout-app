@@ -1,0 +1,35 @@
+---
+description: Arquitectura hexagonal, ROP, capas API y FE del checkout
+globs: apps/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Arquitectura
+
+## API (`apps/api`)
+```
+domain/          # entities, policies
+application/     # use cases + Result (ROP)
+infrastructure/
+  persistence/   # Prisma adapters
+  payment/       # sandbox port/adapter
+  http/          # Nest controllers, DTOs, webhooks
+```
+
+- Controllers: solo HTTP ↔ DTO ↔ use case. **Cero** reglas de negocio.
+- Use cases retornan `Result<T,E>` (`ok`/`err`). Fail-closed en stock/pago.
+- Montos y fees se calculan en servidor. Dinero en centavos enteros.
+- Stock: reservar en PENDING; confirmar APPROVED; liberar DECLINED/ERROR.
+- No persistir PAN/CVV. Solo tokens de pasarela.
+
+## Web (`apps/web`)
+- Redux Toolkit + persist **sin** datos de tarjeta.
+- State machine: LIST → PRODUCT → CHECKOUT_FORM → SUMMARY → PROCESSING → RESULT.
+- Refresh en tarjeta: limpiar PAN/CVV + aviso en español.
+- Mobile-first (iPhone SE baseline). Logos Visa/MC obligatorios y livianos.
+- Polling de estado de transacción; webhook es responsabilidad del backend.
+
+## Prohibido
+- Lógica de pago/stock en controllers o componentes UI.
+- Nuevas capas “por si acaso”, CQRS, microservicios.
+- Frameworks fuera del enunciado.

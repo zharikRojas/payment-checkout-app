@@ -16,3 +16,6 @@ coverage/
 
 # OS / IDE noise
 .idea/
+
+# Local agent notes (do not publish)
+AGENTS.md
