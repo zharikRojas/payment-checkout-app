@@ -1,0 +1,18 @@
+# Private SDD / statement (do not publish)
+.cursor/sdd/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies / build
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.DS_Store
+
+# OS / IDE noise
+.idea/
