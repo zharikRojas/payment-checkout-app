@@ -12,6 +12,7 @@ alwaysApply: true
 ## Spec privada (NO subir)
 - SRS/SDD/fases/enunciado viven en `.cursor/sdd/` (gitignored).
 - **Nunca** commits de `.cursor/sdd/`, keys, `.env`, ni el nombre de la empresa pasarela en el repo público.
+- `AGENTS.md` es solo local (gitignored); no trackear ni publicar.
 - Antes de codear features, lee la fase activa en `.cursor/sdd/03-fases.md` y decisiones en `.cursor/sdd/01-requerimientos.md`.
 
 ## Stack congelado
