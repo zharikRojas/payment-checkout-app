@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ReservationStatus {
+  ACTIVE
+  RELEASED
+  CONFIRMED
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  ERROR
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  priceCents  Int
+  stock       Int
+  imageUrl    String
+  createdAt   DateTime @default(now())
+
+  reservations StockReservation[]
+  transactions Transaction[]
+}
+
+model StockReservation {
+  id            String            @id @default(uuid())
+  productId     String
+  transactionId String            @unique
+  qty           Int
+  status        ReservationStatus
+  createdAt     DateTime          @default(now())
+
+  product     Product     @relation(fields: [productId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  fullName  String
+  email     String
+  phone     String
+  createdAt DateTime @default(now())
+
+  deliveries   Delivery[]
+  transactions Transaction[]
+}
+
+model Delivery {
+  id            String   @id @default(uuid())
+  customerId    String
+  transactionId String?  @unique
+  addressLine1  String
+  city          String
+  region        String
+  postalCode    String
+  phone         String
+  notes         String?
+  status        String   @default("PENDING")
+  createdAt     DateTime @default(now())
+
+  customer    Customer     @relation(fields: [customerId], references: [id])
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+}
+
+model Transaction {
+  id             String            @id @default(uuid())
+  reference      String            @unique
+  productId      String
+  customerId     String
+  qty            Int
+  status         TransactionStatus
+  amountCents    Int
+  baseFeeCents   Int
+  deliveryFeeCents Int
+  currency       String            @default("COP")
+  providerTxId   String?
+  providerStatus String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  product     Product           @relation(fields: [productId], references: [id])
+  customer    Customer          @relation(fields: [customerId], references: [id])
+  reservation StockReservation?
+  delivery    Delivery?
+}
