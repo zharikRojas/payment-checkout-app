@@ -19,20 +19,25 @@ Copia `.env.example` a `.env` y ajusta si hace falta.
 docker compose up -d
 ```
 
-PostgreSQL en `localhost:5432` (usuario/password/db: `checkout`).
+PostgreSQL en `localhost:5433` → container `:5432` (usuario/password/db: `checkout`).
 
 ### API
 
 ```bash
 npm install
+cp .env.example .env && cp .env apps/api/.env   # si aún no existen
+docker compose up -d
+cd apps/api && npx prisma migrate dev --name init_domain && npx prisma db seed && cd ../..
 npm run dev:api
 ```
 
 Health: `GET http://localhost:3000/health` → `{ "status": "ok" }`
 
-Swagger: _pendiente_
+Swagger: `http://localhost:3000/docs`
 
-Cobertura: _pendiente_
+Endpoints dominio: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`
+
+Cobertura: tests unitarios de use cases (Fase 2); ≥85% en Fase 5
 
 ### Web
 
@@ -74,20 +79,25 @@ Copy `.env.example` to `.env` and adjust as needed.
 docker compose up -d
 ```
 
-PostgreSQL on `localhost:5432` (user/password/db: `checkout`).
+PostgreSQL on `localhost:5433` → container `:5432` (user/password/db: `checkout`).
 
 ### API
 
 ```bash
 npm install
+cp .env.example .env && cp .env apps/api/.env   # if missing
+docker compose up -d
+cd apps/api && npx prisma migrate dev --name init_domain && npx prisma db seed && cd ../..
 npm run dev:api
 ```
 
 Health: `GET http://localhost:3000/health` → `{ "status": "ok" }`
 
-Swagger: _TBD_
+Swagger: `http://localhost:3000/docs`
 
-Coverage: _TBD_
+Domain endpoints: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`
+
+Coverage: use-case unit tests (Phase 2); ≥85% in Phase 5
 
 ### Web
 
