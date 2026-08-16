@@ -25,8 +25,10 @@ async function bootstrap() {
 
   const swagger = new DocumentBuilder()
     .setTitle('Payment Checkout API')
-    .setDescription('Domain API (Phase 2) — products, customers, deliveries, pending transactions')
-    .setVersion('0.2.0')
+    .setDescription(
+      'Domain API (Phase 3) — products, customers, deliveries, transactions, pay, payment webhooks',
+    )
+    .setVersion('0.3.0')
     .build();
   SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swagger));
 
