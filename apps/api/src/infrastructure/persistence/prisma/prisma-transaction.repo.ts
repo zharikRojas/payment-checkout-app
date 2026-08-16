@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { ReservationStatus, TransactionStatus } from '@prisma/client';
 import type {
   CreatePendingInput,
+  FinalProviderStatus,
   Transaction,
   TransactionRepo,
 } from '../../../application/ports/transaction.repo';
@@ -18,6 +19,14 @@ export class PrismaTransactionRepo implements TransactionRepo {
 
   findById(id: string): Promise<Transaction | null> {
     return this.prisma.transaction.findUnique({ where: { id } });
+  }
+
+  findByReference(reference: string): Promise<Transaction | null> {
+    return this.prisma.transaction.findUnique({ where: { reference } });
+  }
+
+  findByProviderTxId(providerTxId: string): Promise<Transaction | null> {
+    return this.prisma.transaction.findFirst({ where: { providerTxId } });
   }
 
   async createPending(input: CreatePendingInput): Promise<Transaction> {
@@ -76,6 +85,75 @@ export class PrismaTransactionRepo implements TransactionRepo {
       }
 
       return created;
+    });
+  }
+
+  setProviderInfo(input: {
+    transactionId: string;
+    providerTxId: string;
+    providerStatus: string;
+  }): Promise<Transaction> {
+    return this.prisma.transaction.update({
+      where: { id: input.transactionId },
+      data: {
+        providerTxId: input.providerTxId,
+        providerStatus: input.providerStatus,
+      },
+    });
+  }
+
+  async finalizeFromProvider(input: {
+    transactionId: string;
+    providerTxId: string;
+    providerStatus: string;
+    finalStatus: FinalProviderStatus;
+  }): Promise<Transaction> {
+    return this.prisma.$transaction(async (tx) => {
+      const current = await tx.transaction.findUnique({
+        where: { id: input.transactionId },
+      });
+      if (!current) throw new Error('Transaction not found');
+
+      if (current.status !== TransactionStatus.PENDING) {
+        return current;
+      }
+
+      const updated = await tx.transaction.update({
+        where: { id: input.transactionId },
+        data: {
+          status: input.finalStatus as TransactionStatus,
+          providerTxId: input.providerTxId,
+          providerStatus: input.providerStatus,
+        },
+      });
+
+      const reservation = await tx.stockReservation.findUnique({
+        where: { transactionId: input.transactionId },
+      });
+
+      if (input.finalStatus === 'APPROVED') {
+        if (reservation?.status === ReservationStatus.ACTIVE) {
+          await tx.stockReservation.update({
+            where: { id: reservation.id },
+            data: { status: ReservationStatus.CONFIRMED },
+          });
+          await tx.product.update({
+            where: { id: current.productId },
+            data: { stock: { decrement: current.qty } },
+          });
+        }
+        await tx.delivery.updateMany({
+          where: { transactionId: input.transactionId },
+          data: { status: 'ASSIGNED' },
+        });
+      } else if (reservation?.status === ReservationStatus.ACTIVE) {
+        await tx.stockReservation.update({
+          where: { id: reservation.id },
+          data: { status: ReservationStatus.RELEASED },
+        });
+      }
+
+      return updated;
     });
   }
 }

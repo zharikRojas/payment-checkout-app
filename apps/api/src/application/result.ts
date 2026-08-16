@@ -1,5 +1,11 @@
 export type AppError = {
-  code: 'OUT_OF_STOCK' | 'NOT_FOUND' | 'VALIDATION';
+  code:
+    | 'OUT_OF_STOCK'
+    | 'NOT_FOUND'
+    | 'VALIDATION'
+    | 'NOT_PENDING'
+    | 'PAYMENT_FAILED'
+    | 'UNAUTHORIZED';
   message: string;
 };
 
