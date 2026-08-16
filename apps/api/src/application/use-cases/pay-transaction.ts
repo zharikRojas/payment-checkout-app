@@ -66,6 +66,13 @@ export async function payTransaction(
     return err({ code: 'PAYMENT_FAILED', message: 'Payment provider error' });
   }
 
+  // Never log card tokens, PAN, CVV, or PAYMENT_* secrets — ids/status only
+  console.info('pay.transaction', {
+    transactionId: tx.id,
+    reference: tx.reference,
+    providerStatus: charge.providerStatus,
+  });
+
   const mapped = mapProviderStatus(charge.providerStatus);
   if (mapped === 'PENDING') {
     return ok(
