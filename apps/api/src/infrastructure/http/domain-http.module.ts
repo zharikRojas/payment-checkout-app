@@ -14,6 +14,7 @@ import { CustomersController } from './customers.controller';
 import { DeliveriesController } from './deliveries.controller';
 import { ProductsController } from './products.controller';
 import { TransactionsController } from './transactions.controller';
+import { WebhooksController } from './webhooks.controller';
 
 @Module({
   controllers: [
@@ -21,6 +22,7 @@ import { TransactionsController } from './transactions.controller';
     CustomersController,
     DeliveriesController,
     TransactionsController,
+    WebhooksController,
   ],
   providers: [
     PrismaService,
