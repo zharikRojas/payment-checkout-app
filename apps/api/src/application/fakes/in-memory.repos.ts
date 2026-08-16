@@ -12,6 +12,7 @@ import type {
 import type { Product, ProductRepo } from '../ports/product.repo';
 import type {
   CreatePendingInput,
+  FinalProviderStatus,
   Transaction,
   TransactionRepo,
 } from '../ports/transaction.repo';
@@ -59,6 +60,28 @@ export class InMemoryProductRepo implements ProductRepo {
   addReservation(r: Reservation) {
     this.reservations.push(r);
   }
+
+  getReservation(transactionId: string): Reservation | undefined {
+    return this.reservations.find((r) => r.transactionId === transactionId);
+  }
+
+  /** Used by InMemoryTransactionRepo.finalizeFromProvider */
+  applyFinalize(
+    transactionId: string,
+    productId: string,
+    qty: number,
+    finalStatus: FinalProviderStatus,
+  ) {
+    const r = this.reservations.find((x) => x.transactionId === transactionId);
+    if (!r || r.status !== 'ACTIVE') return;
+    if (finalStatus === 'APPROVED') {
+      r.status = 'CONFIRMED';
+      const p = this.products.find((x) => x.id === productId);
+      if (p) p.stock -= qty;
+    } else {
+      r.status = 'RELEASED';
+    }
+  }
 }
 
 export class InMemoryCustomerRepo implements CustomerRepo {
@@ -99,15 +122,32 @@ export class InMemoryDeliveryRepo implements DeliveryRepo {
     this.items.push(d);
     return d;
   }
+
+  assignForTransaction(transactionId: string) {
+    for (const d of this.items) {
+      if (d.transactionId === transactionId) d.status = 'ASSIGNED';
+    }
+  }
 }
 
 export class InMemoryTransactionRepo implements TransactionRepo {
   private items: Transaction[] = [];
 
-  constructor(private readonly products: InMemoryProductRepo) {}
+  constructor(
+    private readonly products: InMemoryProductRepo,
+    private readonly deliveries?: InMemoryDeliveryRepo,
+  ) {}
 
   async findById(id: string): Promise<Transaction | null> {
     return this.items.find((t) => t.id === id) ?? null;
+  }
+
+  async findByReference(reference: string): Promise<Transaction | null> {
+    return this.items.find((t) => t.reference === reference) ?? null;
+  }
+
+  async findByProviderTxId(providerTxId: string): Promise<Transaction | null> {
+    return this.items.find((t) => t.providerTxId === providerTxId) ?? null;
   }
 
   async createPending(input: CreatePendingInput): Promise<Transaction> {
@@ -141,6 +181,51 @@ export class InMemoryTransactionRepo implements TransactionRepo {
       qty: input.qty,
       status: 'ACTIVE',
     });
+    return tx;
+  }
+
+  async setProviderInfo(input: {
+    transactionId: string;
+    providerTxId: string;
+    providerStatus: string;
+  }): Promise<Transaction> {
+    const tx = this.items.find((t) => t.id === input.transactionId);
+    if (!tx) throw new Error('Transaction not found');
+    tx.providerTxId = input.providerTxId;
+    tx.providerStatus = input.providerStatus;
+    tx.updatedAt = new Date();
+    return tx;
+  }
+
+  async finalizeFromProvider(input: {
+    transactionId: string;
+    providerTxId: string;
+    providerStatus: string;
+    finalStatus: FinalProviderStatus;
+  }): Promise<Transaction> {
+    const tx = this.items.find((t) => t.id === input.transactionId);
+    if (!tx) throw new Error('Transaction not found');
+
+    if (tx.status !== 'PENDING') {
+      return tx;
+    }
+
+    tx.status = input.finalStatus;
+    tx.providerTxId = input.providerTxId;
+    tx.providerStatus = input.providerStatus;
+    tx.updatedAt = new Date();
+
+    this.products.applyFinalize(
+      tx.id,
+      tx.productId,
+      tx.qty,
+      input.finalStatus,
+    );
+
+    if (input.finalStatus === 'APPROVED') {
+      this.deliveries?.assignForTransaction(tx.id);
+    }
+
     return tx;
   }
 }

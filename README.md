@@ -13,6 +13,8 @@ Monorepo npm workspaces (Fase 1): API NestJS + web Vite/React + PostgreSQL.
 
 Copia `.env.example` a `.env` y ajusta si hace falta.
 
+**Pagos (pasarela sandbox):** rellena `PAYMENT_API_URL` (desde el enunciado de la prueba), `PAYMENT_PUBLIC_KEY`, `PAYMENT_PRIVATE_KEY`, `PAYMENT_INTEGRITY_SECRET` y `PAYMENT_EVENTS_SECRET` (placeholders en `.env.example`). URL del webhook: `POST http://localhost:3000/webhooks/payments` (exponer con túnel en local).
+
 ### Base de datos
 
 ```bash
@@ -35,9 +37,9 @@ Health: `GET http://localhost:3000/health` → `{ "status": "ok" }`
 
 Swagger: `http://localhost:3000/docs`
 
-Endpoints dominio: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`
+Endpoints dominio: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`, `POST /transactions/:id/pay`, `POST /webhooks/payments`
 
-Cobertura: tests unitarios de use cases (Fase 2); ≥85% en Fase 5
+Cobertura: tests unitarios de use cases (Fase 2–3); ≥85% en Fase 5
 
 ### Web
 
@@ -73,6 +75,8 @@ npm workspaces monorepo (Phase 1): NestJS API + Vite/React web + PostgreSQL.
 
 Copy `.env.example` to `.env` and adjust as needed.
 
+**Payments (payment provider sandbox):** set `PAYMENT_API_URL` (from the challenge brief), `PAYMENT_PUBLIC_KEY`, `PAYMENT_PRIVATE_KEY`, `PAYMENT_INTEGRITY_SECRET`, and `PAYMENT_EVENTS_SECRET` (placeholders in `.env.example`). Webhook URL: `POST http://localhost:3000/webhooks/payments` (use a tunnel locally).
+
 ### Database
 
 ```bash
@@ -95,9 +99,9 @@ Health: `GET http://localhost:3000/health` → `{ "status": "ok" }`
 
 Swagger: `http://localhost:3000/docs`
 
-Domain endpoints: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`
+Domain endpoints: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`, `POST /transactions/:id/pay`, `POST /webhooks/payments`
 
-Coverage: use-case unit tests (Phase 2); ≥85% in Phase 5
+Coverage: use-case unit tests (Phase 2–3); ≥85% in Phase 5
 
 ### Web
 
