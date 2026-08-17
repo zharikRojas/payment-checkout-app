@@ -12,6 +12,7 @@ import { PrismaService } from '../persistence/prisma/prisma.service';
 import { PrismaTransactionRepo } from '../persistence/prisma/prisma-transaction.repo';
 import { CustomersController } from './customers.controller';
 import { DeliveriesController } from './deliveries.controller';
+import { PaymentsController } from './payments.controller';
 import { ProductsController } from './products.controller';
 import { TransactionsController } from './transactions.controller';
 import { WebhooksController } from './webhooks.controller';
@@ -21,6 +22,7 @@ import { WebhooksController } from './webhooks.controller';
     ProductsController,
     CustomersController,
     DeliveriesController,
+    PaymentsController,
     TransactionsController,
     WebhooksController,
   ],

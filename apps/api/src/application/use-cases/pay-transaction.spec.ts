@@ -10,7 +10,7 @@ import {
   verifyPaymentEventChecksum,
 } from './handle-payment-webhook';
 import { payTransaction } from './pay-transaction';
-import { createPendingTransaction } from './create-pending-transaction';
+import { createPendingTransaction, getTransaction } from './create-pending-transaction';
 
 describe('pay + webhook', () => {
   const productId = '11111111-1111-1111-1111-111111111111';
@@ -70,7 +70,7 @@ describe('pay + webhook', () => {
         id: providerId,
         reference,
         status,
-        amount_in_cents: 33000,
+        amount_in_cents: 1_320_000,
       },
     };
     const properties = [
@@ -80,7 +80,7 @@ describe('pay + webhook', () => {
     ];
     const timestamp = 1710000000;
     const concat =
-      `${providerId}${status}33000` + String(timestamp) + eventsSecret;
+      `${providerId}${status}1320000` + String(timestamp) + eventsSecret;
     const checksum = createHash('sha256').update(concat).digest('hex');
     return {
       event: 'transaction.updated',
@@ -151,6 +151,25 @@ describe('pay + webhook', () => {
     expect(final?.status).toBe('APPROVED');
     expect(products.getReservation(tx.id)?.status).toBe('CONFIRMED');
     expect((await products.findById(productId))!.stock).toBe(9);
+  });
+
+  it('GET syncs PENDING from provider to APPROVED', async () => {
+    const { products, customers, transactions } = setup(10);
+    const tx = await pendingTx(products, customers, transactions, 1);
+    const gateway = new FakePaymentGateway('PENDING', 'prov_later');
+    const paid = await payTransaction(transactions, customers, gateway, {
+      transactionId: tx.id,
+      token: 'tok_test',
+    });
+    expect(paid.ok).toBe(true);
+    if (paid.ok) expect(paid.value.status).toBe('PENDING');
+
+    gateway.status = 'APPROVED';
+    const got = await getTransaction(transactions, tx.id, gateway);
+    expect(got.ok).toBe(true);
+    if (!got.ok) return;
+    expect(got.value.status).toBe('APPROVED');
+    expect(products.getReservation(tx.id)?.status).toBe('CONFIRMED');
   });
 
   it('rejects bad checksum', async () => {

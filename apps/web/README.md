@@ -8,7 +8,7 @@ SPA React + Vite del checkout (Fase 4).
 # desde la raíz del monorepo
 npm install
 cp apps/web/.env.example apps/web/.env
-# Rellena VITE_PAYMENT_* con los valores del enunciado (pasarela sandbox)
+# Solo hace falta VITE_API_URL (tokenize va por el API)
 npm run dev:api
 npm run dev:web
 ```
@@ -24,7 +24,7 @@ npm run dev:web
 # from monorepo root
 npm install
 cp apps/web/.env.example apps/web/.env
-# Fill VITE_PAYMENT_* from the challenge brief (payment provider sandbox)
+# Only VITE_API_URL is required (tokenize is proxied by the API)
 npm run dev:api
 npm run dev:web
 ```

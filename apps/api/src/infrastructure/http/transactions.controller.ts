@@ -70,6 +70,6 @@ export class TransactionsController {
   @Get(':id')
   @ApiOkResponse({ description: 'Transaction by id' })
   async get(@Param('id', ParseUUIDPipe) id: string) {
-    return unwrapResult(await getTransaction(this.transactions, id));
+    return unwrapResult(await getTransaction(this.transactions, id, this.payments));
   }
 }
