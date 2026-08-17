@@ -60,8 +60,16 @@ const checkoutSlice = createSlice({
       else state.products.push(action.payload);
     },
     selectProduct(state, action: PayloadAction<string>) {
+      if (state.productId !== action.payload) {
+        state.qty = 1;
+        state.customer = null;
+        state.delivery = null;
+        state.transactionId = null;
+        state.reference = null;
+        state.lastStatus = null;
+        state.cardBanner = false;
+      }
       state.productId = action.payload;
-      state.qty = 1;
       state.step = 'product';
       state.error = null;
     },
@@ -120,6 +128,8 @@ const checkoutSlice = createSlice({
       state.step = 'list';
       state.productId = null;
       state.qty = 1;
+      state.customer = null;
+      state.delivery = null;
       state.transactionId = null;
       state.reference = null;
       state.lastStatus = null;

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProducts } from '../../shared/api';
 import { formatCop } from '../../shared/fees';
@@ -8,6 +9,7 @@ import styles from './Checkout.module.css';
 
 export function ProductList() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const products = useSelector((s: RootState) => s.checkout.products);
   const error = useSelector((s: RootState) => s.checkout.error);
   const [loading, setLoading] = useState(products.length === 0);
@@ -45,7 +47,10 @@ export function ProductList() {
             key={p.id}
             type="button"
             className={styles.cardBtn}
-            onClick={() => dispatch(selectProduct(p.id))}
+            onClick={() => {
+              dispatch(selectProduct(p.id));
+              navigate(`/productos/${p.id}`);
+            }}
           >
             <img className={styles.thumb} src={p.imageUrl} alt="" />
             <div className={styles.meta}>
