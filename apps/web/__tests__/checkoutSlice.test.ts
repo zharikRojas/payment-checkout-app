@@ -7,6 +7,13 @@ import checkoutReducer, {
   startProcessing,
   finishResult,
   resetToList,
+  setStep,
+  setProducts,
+  upsertProduct,
+  setError,
+  setLastStatus,
+  clearCardBanner,
+  backToProduct,
 } from '../src/features/checkout/slice';
 
 describe('checkoutSlice', () => {
@@ -88,3 +95,30 @@ describe('checkoutSlice', () => {
     expect(state.delivery).toBeNull();
     expect(state.step).toBe('list');
   });
+
+  it('covers remaining reducers', () => {
+    const product = {
+      id: 'p1',
+      name: 'n',
+      description: 'd',
+      priceCents: 1,
+      stock: 1,
+      imageUrl: 'u',
+      availableStock: 1,
+    };
+    let state = checkoutReducer(undefined, setStep('list'));
+    state = checkoutReducer(state, setProducts([product]));
+    state = checkoutReducer(state, upsertProduct({ ...product, name: 'n2' }));
+    state = checkoutReducer(state, upsertProduct({ ...product, id: 'p2', name: 'other' }));
+    state = checkoutReducer(state, setError('boom'));
+    state = checkoutReducer(state, setLastStatus('PENDING'));
+    state = checkoutReducer(state, showCardBanner());
+    state = checkoutReducer(state, clearCardBanner());
+    state = checkoutReducer(state, startProcessing({ transactionId: 't', reference: 'r' }));
+    state = checkoutReducer(state, backToProduct());
+    expect(state.products).toHaveLength(2);
+    expect(state.step).toBe('product');
+    expect(state.cardBanner).toBe(false);
+    expect(state.transactionId).toBeNull();
+  });
+});

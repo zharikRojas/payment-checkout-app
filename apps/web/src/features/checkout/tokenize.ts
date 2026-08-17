@@ -1,3 +1,5 @@
+import { getApiUrl } from '../../shared/env';
+
 type TokenizeInput = {
   number: string;
   cvc: string;
@@ -8,7 +10,7 @@ type TokenizeInput = {
 
 /** Tokenize card via our API proxy — never call the payment provider from the browser. */
 export async function tokenizeCard(input: TokenizeInput): Promise<string> {
-  const apiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+  const apiUrl = getApiUrl();
   if (!apiUrl) {
     throw new Error('Configura VITE_API_URL en .env');
   }

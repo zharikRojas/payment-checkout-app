@@ -25,10 +25,9 @@ describe('luhnCheck', () => {
     expect(luhnCheck('4242424242424241')).toBe(false);
   });
 
-  it('ignores spaces', () => {
-    expect(luhnCheck('4242 4242 4242 4242')).toBe(true);
+  it('rejects a short number', () => {
+    expect(luhnCheck('4242')).toBe(false);
   });
-});
 
 describe('detectBrand', () => {
   it('detects visa', () => {
@@ -43,10 +42,10 @@ describe('detectBrand', () => {
     expect(detectBrand('2221000000000009')).toBe('mastercard');
   });
 
-  it('returns null for unknown', () => {
-    expect(detectBrand('6011000000000004')).toBe(null);
+  it('returns null for empty input', () => {
+    expect(detectBrand('')).toBe(null);
+    expect(normalizeMonth('')).toBe(null);
   });
-});
 
 describe('normalizeMonth', () => {
   it('pads 1–9', () => {

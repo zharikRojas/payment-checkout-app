@@ -1,4 +1,4 @@
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+import { getApiUrl } from './env';
 
 export type Product = {
   id: string;
@@ -42,6 +42,7 @@ export type Transaction = {
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const API_URL = getApiUrl();
   if (!API_URL) {
     throw new Error('Configura VITE_API_URL en .env');
   }
