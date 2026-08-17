@@ -245,6 +245,96 @@
   gap: 12px;
 }
 
+.checkoutLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.orderAside {
+  order: -1;
+}
+
+.orderCard {
+  background: #eceff1;
+  border-radius: 12px;
+  padding: 10px 12px 8px;
+  display: grid;
+  gap: 10px;
+}
+
+.orderToggle {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.orderChevron {
+  display: inline-block;
+  transform: rotate(180deg);
+  font-size: 0.85rem;
+}
+
+.orderChevron[data-open] {
+  transform: rotate(0deg);
+}
+
+.orderBody {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.orderBody[data-collapsed] {
+  display: none;
+}
+
+.orderThumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #dfe5e8;
+}
+
+.orderMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.orderMeta span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.orderPrice {
+  font-weight: 700;
+}
+
+.orderBack {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 4px;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+}
+
 .formCols {
   display: grid;
   gap: 12px;
@@ -317,96 +407,80 @@
   font-size: 0.82rem;
 }
 
-/* Material backdrop: back layer peeks; front sheet conceals */
-.backdrop {
-  position: relative;
+/* Material: fixed overlay; back layer = real CheckoutModal under scrim */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   display: flex;
-  flex-direction: column;
-  min-height: min(78svh, 640px);
-  border-radius: 16px;
+  align-items: flex-end;
+  justify-content: center;
   overflow: hidden;
 }
 
-.backLayer {
-  flex: 1 1 auto;
-  min-height: 140px;
-  padding: 18px 16px 88px;
-  color: #e8eeeb;
-  background:
-    linear-gradient(180deg, rgba(18, 20, 23, 0.55) 0%, rgba(18, 20, 23, 0.72) 100%),
-    repeating-linear-gradient(
-      -18deg,
-      transparent 0 10px,
-      rgba(255, 255, 255, 0.04) 10px 11px
-    ),
-    radial-gradient(900px 420px at 15% 0%, #1f6f68 0%, transparent 55%),
-    #1a2220;
-}
-
-.backTitle {
-  margin: 0 0 14px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  opacity: 0.92;
-}
-
-.backPeek {
-  display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 12px;
-  align-items: center;
-  max-width: 360px;
-}
-
-.backThumb {
-  width: 56px;
-  height: 56px;
-  object-fit: cover;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
-}
-
-.backMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  font-size: 0.88rem;
-}
-
-.backMeta strong {
-  font-size: 0.98rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.backMeta span {
-  opacity: 0.85;
-}
-
-.backReady {
-  color: #9fe8dc;
-  font-weight: 600;
+.scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background: rgba(18, 20, 23, 0.52);
+  animation: fadeIn 0.25s ease-out;
 }
 
 .sheet {
   position: relative;
   z-index: 1;
-  margin-top: -64px;
+  width: 100%;
+  max-width: 100%;
+  max-height: 80vh;
+  overflow: auto;
   background: var(--surface);
-  border-radius: 20px 20px 12px 12px;
-  padding: 10px 14px 16px;
+  border-radius: 20px 20px 0 0;
+  padding: 10px 16px 24px;
   box-shadow:
     0 -4px 24px rgba(18, 20, 23, 0.18),
     var(--shadow);
   display: grid;
   gap: 10px;
-  width: 100%;
-  max-width: 100%;
-  flex: 0 0 auto;
+  animation: sheetUp 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .scrim {
+    animation: none;
+  }
 }
 
 .sheetHandle {
@@ -471,7 +545,7 @@
   color: var(--danger);
 }
 
-/* tablet ~768px+ */
+/* tablet ~768px+: form + resumen al lado; sheet deja de ser bottom-sheet */
 @media (min-width: 768px) {
   .shell {
     width: min(100%, 680px);
@@ -480,7 +554,7 @@
   }
 
   .shellWide {
-    width: min(100%, 720px);
+    width: min(100%, 980px);
   }
 
   .list {
@@ -491,18 +565,64 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .sheetWide {
-    max-width: 480px;
-    margin-left: auto;
-    margin-right: auto;
+  .checkoutLayout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    align-items: start;
+    gap: 24px;
   }
 
-  .backLayer {
-    padding: 24px 22px 100px;
+  .orderAside {
+    order: 0;
+    position: sticky;
+    top: 24px;
   }
 
-  .backPeek {
-    max-width: 420px;
+  .orderToggle {
+    pointer-events: none;
+  }
+
+  .orderChevron {
+    display: none;
+  }
+
+  .orderBody[data-collapsed] {
+    display: grid;
+  }
+
+  .form {
+    max-width: none;
+  }
+
+  .overlay {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .sheet {
+    width: min(840px, 94vw);
+    max-width: min(840px, 94vw);
+    border-radius: 20px;
+    margin: 0;
+    max-height: 88vh;
+    padding: 24px 32px 32px;
+    animation: sheetIn 0.32s ease-out;
+  }
+
+  .sheetHandle {
+    display: none;
+  }
+
+  .sheetTitle {
+    font-size: 1.45rem;
+  }
+
+  .line {
+    font-size: 1.05rem;
+  }
+
+  .total {
+    font-size: 1.3rem;
   }
 }
 
@@ -515,7 +635,7 @@
   }
 
   .shellWide {
-    width: min(100%, 1080px);
+    width: min(100%, 1120px);
   }
 
   .list {
@@ -544,24 +664,15 @@
     aspect-ratio: 4 / 3;
   }
 
-  .sheetWide {
-    max-width: 520px;
+  .checkoutLayout {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+    gap: 28px;
   }
 
-  .form {
-    max-width: 720px;
-  }
-
-  .backdrop {
-    min-height: min(72svh, 680px);
-  }
-
-  .backLayer {
-    padding: 28px 28px 110px;
-  }
-
-  .backThumb {
-    width: 64px;
-    height: 64px;
+  .sheet {
+    width: min(960px, 90vw);
+    max-width: min(960px, 90vw);
+    padding: 32px 44px 40px;
+    gap: 14px;
   }
 }

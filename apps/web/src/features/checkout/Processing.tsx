@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getTransaction } from '../../shared/api';
 import type { AppDispatch, RootState } from './store';
@@ -11,12 +12,14 @@ const MAX_MS = 30_000;
 
 export function Processing() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { transactionId, reference, error } = useSelector((s: RootState) => s.checkout);
 
   useEffect(() => {
     if (!transactionId) {
       dispatch(setError('No hay transacción en curso.'));
       dispatch(finishResult('ERROR'));
+      navigate('/resultado', { replace: true });
       return;
     }
 
@@ -30,10 +33,12 @@ export function Processing() {
         dispatch(setLastStatus(tx.status));
         if (FINAL.has(tx.status)) {
           dispatch(finishResult(tx.status));
+          navigate('/resultado', { replace: true });
           return;
         }
         if (Date.now() - started >= MAX_MS) {
           dispatch(finishResult(tx.status === 'PENDING' ? 'PENDING' : tx.status));
+          navigate('/resultado', { replace: true });
           return;
         }
         window.setTimeout(tick, INTERVAL_MS);
@@ -42,6 +47,7 @@ export function Processing() {
         if (Date.now() - started >= MAX_MS) {
           dispatch(setError(e instanceof Error ? e.message : 'Error al consultar el pago'));
           dispatch(finishResult('ERROR'));
+          navigate('/resultado', { replace: true });
           return;
         }
         window.setTimeout(tick, INTERVAL_MS);
@@ -52,7 +58,7 @@ export function Processing() {
     return () => {
       alive = false;
     };
-  }, [transactionId, dispatch]);
+  }, [transactionId, dispatch, navigate]);
 
   return (
     <section className={`${styles.shell} ${styles.center}`}>

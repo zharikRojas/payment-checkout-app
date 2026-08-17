@@ -5,8 +5,8 @@ import { config as loadEnv } from 'dotenv';
 import { resolve } from 'path';
 import { AppModule } from './app.module';
 
-loadEnv({ path: resolve(__dirname, '../../../.env') });
-loadEnv({ path: resolve(__dirname, '../../.env') });
+// dist/main.js and src/main.ts both sit one level below apps/api/
+loadEnv({ path: resolve(__dirname, '../.env') });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

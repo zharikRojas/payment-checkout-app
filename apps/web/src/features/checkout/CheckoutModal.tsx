@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { formatCop } from '../../shared/fees';
 import { detectBrand, formatCardNumber, isValidExp, luhnCheck, normalizeMonth } from './card';
 import { BrandLogo } from './CardLogos';
 import type { AppDispatch, RootState } from './store';
@@ -9,7 +11,6 @@ import {
   setCustomerDelivery,
   setDelivery,
   setError,
-  setStep,
 } from './slice';
 import styles from './Checkout.module.css';
 
@@ -49,7 +50,12 @@ export function CheckoutModal({
   onCardReady: (card: CardDraft) => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
-  const { customer, delivery, cardBanner, error } = useSelector((s: RootState) => s.checkout);
+  const navigate = useNavigate();
+  const { customer, delivery, cardBanner, error, productId, qty, products } = useSelector(
+    (s: RootState) => s.checkout,
+  );
+  const product = products.find((p) => p.id === productId);
+  const [orderOpen, setOrderOpen] = useState(true);
 
   const [fullName, setFullName] = useState(customer?.fullName ?? '');
   const [email, setEmail] = useState(customer?.email ?? '');
@@ -70,6 +76,26 @@ export function CheckoutModal({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const brand = detectBrand(cardNumber);
+
+  useEffect(() => {
+    setFullName(customer?.fullName ?? '');
+    setEmail(customer?.email ?? '');
+    setPhone(digitsOnly(customer?.phone ?? ''));
+    setAddressLine1(delivery?.addressLine1 ?? '');
+    setCity(delivery?.city ?? '');
+    setRegion(delivery?.region ?? '');
+    setPostalCode(delivery?.postalCode ?? '');
+    setDeliveryPhone(digitsOnly(delivery?.phone ?? ''));
+    setNotes(delivery?.notes ?? '');
+    setCardNumber('');
+    setCvc('');
+    setExpMonth('');
+    setExpYear('');
+    setCardHolder('');
+    setFieldErrors({});
+    // ponytail: reset draft when product (and thus personal data) changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]);
 
   // Persist customer/delivery (not card) so refresh keeps progress while on checkout.
   useEffect(() => {
@@ -97,6 +123,7 @@ export function CheckoutModal({
     postalCode,
     deliveryPhone,
     notes,
+    productId,
     dispatch,
   ]);
 
@@ -162,13 +189,49 @@ export function CheckoutModal({
         },
       }),
     );
+    if (productId) navigate(`/checkout/${productId}/resumen`);
   }
+
+  const safeQty = Math.max(1, Math.trunc(qty) || 1);
+  const lineTotal = (product?.priceCents ?? 0) * safeQty;
+
+  const orderCard = (
+    <div className={styles.orderCard}>
+      <button
+        type="button"
+        className={styles.orderToggle}
+        aria-expanded={orderOpen}
+        onClick={() => setOrderOpen((o) => !o)}
+      >
+        <span>
+          {safeQty} artículo{safeQty === 1 ? '' : 's'}
+        </span>
+        <span className={styles.orderChevron} data-open={orderOpen ? '' : undefined} aria-hidden>
+          ^
+        </span>
+      </button>
+      {product && (
+        <div className={styles.orderBody} data-collapsed={orderOpen ? undefined : ''}>
+          <img className={styles.orderThumb} src={product.imageUrl} alt="" />
+          <div className={styles.orderMeta}>
+            <strong>{product.name}</strong>
+            <span>Cantidad: {safeQty}</span>
+          </div>
+          <div className={styles.orderPrice}>{formatCop(lineTotal)}</div>
+        </div>
+      )}
+      <button
+        type="button"
+        className={styles.orderBack}
+        onClick={() => navigate(productId ? `/productos/${productId}` : '/')}
+      >
+        Regresar
+      </button>
+    </div>
+  );
 
   return (
     <section className={`${styles.shell} ${styles.shellWide}`}>
-      <button type="button" className={styles.ghost} onClick={() => dispatch(setStep('product'))}>
-        ← Producto
-      </button>
       <h1 className={styles.brand}>Datos de pago</h1>
       {cardBanner && (
         <p className={styles.banner}>
@@ -177,7 +240,8 @@ export function CheckoutModal({
       )}
       {error && <p className={styles.error}>{error}</p>}
 
-      <form className={styles.form} onSubmit={onSubmit} noValidate>
+      <div className={styles.checkoutLayout}>
+        <form className={styles.form} onSubmit={onSubmit} noValidate>
         <h2 className={styles.sectionTitle}>Cliente</h2>
         <div className={styles.formCols}>
           <label className={`${styles.label} ${styles.span2}`}>
@@ -482,7 +546,9 @@ export function CheckoutModal({
         <button type="submit" className={styles.primary}>
           Continuar al resumen
         </button>
-      </form>
+        </form>
+        <aside className={styles.orderAside}>{orderCard}</aside>
+      </div>
     </section>
   );
 }

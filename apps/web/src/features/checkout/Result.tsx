@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from './store';
 import { backToProduct, resetToList } from './slice';
@@ -40,7 +41,8 @@ function messageFor(status: string | null): { title: string; body: string; ok: b
 
 export function Result() {
   const dispatch = useDispatch<AppDispatch>();
-  const { lastStatus, reference } = useSelector((s: RootState) => s.checkout);
+  const navigate = useNavigate();
+  const { lastStatus, reference, productId } = useSelector((s: RootState) => s.checkout);
   const msg = messageFor(lastStatus);
 
   return (
@@ -48,10 +50,24 @@ export function Result() {
       <h1 className={`${styles.brand} ${msg.ok ? styles.statusOk : styles.statusBad}`}>{msg.title}</h1>
       <p className={styles.sub}>{msg.body}</p>
       {reference && <p className={styles.sub}>Referencia: {reference}</p>}
-      <button type="button" className={styles.primary} onClick={() => dispatch(backToProduct())}>
+      <button
+        type="button"
+        className={styles.primary}
+        onClick={() => {
+          dispatch(backToProduct());
+          navigate(productId ? `/productos/${productId}` : '/');
+        }}
+      >
         Volver al producto
       </button>
-      <button type="button" className={styles.ghost} onClick={() => dispatch(resetToList())}>
+      <button
+        type="button"
+        className={styles.ghost}
+        onClick={() => {
+          dispatch(resetToList());
+          navigate('/');
+        }}
+      >
         Volver al listado
       </button>
     </section>

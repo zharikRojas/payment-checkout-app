@@ -1,12 +1,14 @@
 import { BASE_FEE_CENTS, CURRENCY, DELIVERY_FEE_CENTS } from '../../domain/fees';
 import { err, ok, type Result } from '../result';
 import type { CustomerRepo } from '../ports/customer.repo';
+import type { PaymentGateway } from '../ports/payment.gateway';
 import type { ProductRepo } from '../ports/product.repo';
 import type {
   DeliveryPayload,
   Transaction,
   TransactionRepo,
 } from '../ports/transaction.repo';
+import { mapProviderStatus } from './pay-transaction';
 
 export class OutOfStockError extends Error {
   readonly code = 'OUT_OF_STOCK' as const;
@@ -74,12 +76,39 @@ export async function createPendingTransaction(
 export async function getTransaction(
   transactions: TransactionRepo,
   id: string,
+  gateway?: PaymentGateway,
 ): Promise<Result<Transaction>> {
   const tx = await transactions.findById(id);
   if (!tx) {
     return err({ code: 'NOT_FOUND', message: 'Transaction not found' });
   }
-  return ok(tx);
+  // Webhooks don't reach localhost; FE polling re-reads provider if still PENDING.
+  if (!gateway || tx.status !== 'PENDING' || !tx.providerTxId) {
+    return ok(tx);
+  }
+  try {
+    const charge = await gateway.getCharge(tx.providerTxId);
+    const mapped = mapProviderStatus(charge.providerStatus);
+    if (mapped === 'PENDING') {
+      return ok(
+        await transactions.setProviderInfo({
+          transactionId: tx.id,
+          providerTxId: charge.providerTxId,
+          providerStatus: charge.providerStatus,
+        }),
+      );
+    }
+    return ok(
+      await transactions.finalizeFromProvider({
+        transactionId: tx.id,
+        providerTxId: charge.providerTxId,
+        providerStatus: charge.providerStatus,
+        finalStatus: mapped,
+      }),
+    );
+  } catch {
+    return ok(tx);
+  }
 }
 
 /** availableStock(product) = product.stock - sum(ACTIVE reservations qty) */

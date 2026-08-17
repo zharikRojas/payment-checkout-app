@@ -1,6 +1,7 @@
 import checkoutReducer, {
   goCheckout,
   selectProduct,
+  setCustomer,
   setQty,
   showCardBanner,
   startProcessing,
@@ -52,10 +53,38 @@ describe('checkoutSlice', () => {
     expect(state.lastStatus).toBe('APPROVED');
   });
 
-  it('resets to list', () => {
+  it('clears personal data when switching products', () => {
     let state = checkoutReducer(undefined, selectProduct('p1'));
-    state = checkoutReducer(state, resetToList());
-    expect(state.step).toBe('list');
-    expect(state.productId).toBeNull();
+    state = checkoutReducer(
+      state,
+      setCustomer({ fullName: 'Ada', email: 'a@b.c', phone: '3001234567' }),
+    );
+    state = checkoutReducer(state, selectProduct('p2'));
+    expect(state.productId).toBe('p2');
+    expect(state.customer).toBeNull();
+    expect(state.delivery).toBeNull();
+    expect(state.qty).toBe(1);
   });
-});
+
+  it('keeps personal data when reselecting the same product', () => {
+    let state = checkoutReducer(undefined, selectProduct('p1'));
+    state = checkoutReducer(
+      state,
+      setCustomer({ fullName: 'Ada', email: 'a@b.c', phone: '3001234567' }),
+    );
+    state = checkoutReducer(state, selectProduct('p1'));
+    expect(state.customer?.fullName).toBe('Ada');
+  });
+
+  it('resetToList clears product and personal data', () => {
+    let state = checkoutReducer(undefined, selectProduct('p1'));
+    state = checkoutReducer(
+      state,
+      setCustomer({ fullName: 'Ada', email: 'a@b.c', phone: '3001234567' }),
+    );
+    state = checkoutReducer(state, resetToList());
+    expect(state.productId).toBeNull();
+    expect(state.customer).toBeNull();
+    expect(state.delivery).toBeNull();
+    expect(state.step).toBe('list');
+  });
