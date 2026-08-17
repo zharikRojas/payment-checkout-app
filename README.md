@@ -44,10 +44,17 @@ Cobertura: tests unitarios de use cases (Fase 2–3); ≥85% en Fase 5
 ### Web
 
 ```bash
+npm install
+cp apps/web/.env.example apps/web/.env
+# Copia VITE_PAYMENT_API_URL y VITE_PAYMENT_PUBLIC_KEY del enunciado de la prueba
+# (sandbox de la pasarela). VITE_API_URL=http://localhost:3000
+npm run dev:api   # en otra terminal, API arriba
 npm run dev:web
 ```
 
-URL local: _http://localhost:5173_ (placeholder)
+URL local: _http://localhost:5173_
+
+Flujo: listado → producto → checkout → resumen → procesamiento (polling) → resultado.
 
 ### Scripts útiles
 
@@ -106,10 +113,17 @@ Coverage: use-case unit tests (Phase 2–3); ≥85% in Phase 5
 ### Web
 
 ```bash
+npm install
+cp apps/web/.env.example apps/web/.env
+# Copy VITE_PAYMENT_API_URL and VITE_PAYMENT_PUBLIC_KEY from the challenge brief
+# (payment provider sandbox). VITE_API_URL=http://localhost:3000
+npm run dev:api   # separate terminal, API must be up
 npm run dev:web
 ```
 
-Local URL: _http://localhost:5173_ (placeholder)
+Local URL: _http://localhost:5173_
+
+Flow: list → product → checkout → summary → processing (poll) → result.
 
 ### Useful scripts
 

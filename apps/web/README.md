@@ -1,32 +1,35 @@
-# React + TypeScript + Vite
+# Web (apps/web)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+SPA React + Vite del checkout (Fase 4).
 
-Currently, two official plugins are available:
+## Español
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+# desde la raíz del monorepo
+npm install
+cp apps/web/.env.example apps/web/.env
+# Rellena VITE_PAYMENT_* con los valores del enunciado (pasarela sandbox)
+npm run dev:api
+npm run dev:web
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+- API en `http://localhost:3000`
+- Web en `http://localhost:5173`
+- Tests: `npm run test -w apps/web`
+- Build: `npm run build -w apps/web`
+
+## English
+
+```bash
+# from monorepo root
+npm install
+cp apps/web/.env.example apps/web/.env
+# Fill VITE_PAYMENT_* from the challenge brief (payment provider sandbox)
+npm run dev:api
+npm run dev:web
+```
+
+- API at `http://localhost:3000`
+- Web at `http://localhost:5173`
+- Tests: `npm run test -w apps/web`
+- Build: `npm run build -w apps/web`
