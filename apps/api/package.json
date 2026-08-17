@@ -34,6 +34,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "dotenv": "^16.6.1",
+    "helmet": "^8.3.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1"
@@ -77,9 +78,21 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.ts",
+      "!**/*.spec.ts",
+      "!main.ts",
+      "!**/*.module.ts",
+      "!**/dto/**",
+      "!**/ports/**",
+      "!**/persistence/**",
+      "!**/infrastructure/http/*.controller.ts"
     ],
     "coverageDirectory": "../coverage",
+    "coverageThreshold": {
+      "global": {
+        "lines": 85
+      }
+    },
     "testEnvironment": "node"
   }
 }
