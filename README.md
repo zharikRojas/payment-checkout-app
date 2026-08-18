@@ -2,94 +2,168 @@
 
 ## Español
 
-Monorepo npm workspaces (Fase 1): API NestJS + web Vite/React + PostgreSQL.
+Checkout de invitado (sin login): catálogo, pago con tarjeta en sandbox, reserva de stock y entrega. Monorepo npm workspaces: API NestJS + web Vite/React + PostgreSQL.
 
-### Requisitos
+### Demo (AWS)
 
-- Node.js (npm workspaces)
-- Docker (opcional, para la base de datos)
+| Qué | URL |
+|-----|-----|
+| Frontend | https://d302q7p7lf2y41.cloudfront.net |
+| API | https://d1aoysjwqe9rtj.cloudfront.net |
+| Health | https://d1aoysjwqe9rtj.cloudfront.net/health |
+| Swagger | https://d1aoysjwqe9rtj.cloudfront.net/docs |
+
+**Arquitectura:** SPA en S3 + CloudFront · API Nest (Docker) en EC2 + CloudFront (HTTPS) · RDS PostgreSQL 16.
+
+**Fees (servidor, centavos COP):** base `500_000` ($5.000) + domicilio `800_000` ($8.000).
+
+**Webhook sandbox:** `POST https://d1aoysjwqe9rtj.cloudfront.net/webhooks/payments`
+
+### Modelo de datos
+
+![Modelo relacional](docs/modelo-relacional.png)
+
+- Stock disponible = `product.stock` − suma de reservas `ACTIVE`.
+- `PENDING` → crea reserva `ACTIVE`.
+- `APPROVED` → reserva `CONFIRMED` y descuenta `stock`.
+- `DECLINED` / `ERROR` → reserva `RELEASED`.
+- Sin PAN/CVV en base de datos. `_prisma_migrations` es tabla interna de Prisma.
+
+Schema: `apps/api/prisma/schema.prisma`. Seed: `apps/api/prisma/seed.ts` (`npx prisma db seed`).
+
+### Requisitos locales
+
+- Node.js 22 (npm workspaces)
+- Docker (opcional, Postgres local)
 
 ### Variables de entorno
 
-Copia `.env.example` a `.env` y ajusta si hace falta.
+Copia `.env.example` a `.env` y a `apps/api/.env`. En web: `apps/web/.env.example` → `apps/web/.env`.
 
-**Pagos (pasarela sandbox):** rellena `PAYMENT_API_URL` (desde el enunciado de la prueba), `PAYMENT_PUBLIC_KEY`, `PAYMENT_PRIVATE_KEY`, `PAYMENT_INTEGRITY_SECRET` y `PAYMENT_EVENTS_SECRET` (placeholders en `.env.example`). URL del webhook: `POST http://localhost:3000/webhooks/payments` (exponer con túnel en local).
+| Variable | Uso |
+|----------|-----|
+| `DATABASE_URL` | PostgreSQL |
+| `API_PORT` / `PORT` | Puerto API (Render/EC2: `PORT`) |
+| `WEB_ORIGIN` | CORS, orígenes separados por coma |
+| `PAYMENT_API_URL` | Base URL sandbox (enunciado) |
+| `PAYMENT_PUBLIC_KEY` | Tokenización |
+| `PAYMENT_PRIVATE_KEY` | Cobro en servidor |
+| `PAYMENT_INTEGRITY_SECRET` | Firma integrity |
+| `PAYMENT_EVENTS_SECRET` | Webhooks |
+| `VITE_API_URL` | Solo web; se quema en el **build** |
 
-### Base de datos
+No commitear secretos. No loguear tokens, PAN ni CVV.
+
+### Base de datos (local)
 
 ```bash
 docker compose up -d
 ```
 
-PostgreSQL en `localhost:5433` → container `:5432` (usuario/password/db: `checkout`).
+PostgreSQL en `localhost:5433` → contenedor `:5432` (usuario/password/db: `checkout`).
 
-### API
+### API (local)
 
 ```bash
 npm install
-cp .env.example .env && cp .env apps/api/.env   # si aún no existen
+cp .env.example .env && cp .env apps/api/.env
 docker compose up -d
-cd apps/api && npx prisma migrate dev --name init_domain && npx prisma db seed && cd ../..
+cd apps/api && npx prisma migrate deploy && npx prisma db seed && cd ../..
 npm run dev:api
 ```
 
-Health: `GET http://localhost:3000/health` → `{ "status": "ok" }`
+Health: `GET http://localhost:3000/health` → `{ "status": "ok" }`  
+Swagger: http://localhost:3000/docs
 
-Swagger: `http://localhost:3000/docs`
+Endpoints: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`, `POST /transactions/:id/pay`, `POST /payments/card-tokens`, `POST /webhooks/payments`
 
-Endpoints dominio: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`, `POST /transactions/:id/pay`, `POST /payments/card-tokens`, `POST /webhooks/payments`
+**Cobertura (líneas, Jest):** API **98.27%** · web **97.05%** (`npm run test:cov:api` / `test:cov:web`). Umbral: ≥85%. En API se miden use cases, gateway sandbox y unwrap; no Prisma ni `main.ts`. En web, módulos TS (slice, card, api); no componentes TSX.
 
-**Cobertura (líneas, Jest):** API **98.27%** · web **97.05%** (`npm run test:cov:api` / `test:cov:web`). Umbral CI: ≥85%. En API se miden use cases, gateway sandbox y unwrap; no Prisma ni `main.ts` (I/O). En web se miden módulos TS (slice, card, api); no componentes TSX.
+**Seguridad HTTP:** Helmet + CORS allowlist (`WEB_ORIGIN`) + CSP en el `index.html` de la SPA (más laxo en `vite dev` por HMR). HTTPS en CloudFront.
 
-**Seguridad HTTP:** Helmet + CORS allowlist (`WEB_ORIGIN` separado por comas) + CSP en el `index.html` de la SPA (más laxo en `vite dev` por HMR).
+**npm audit:** avisos high transitivos (`prisma`/`deepmerge-ts`, `@nestjs/swagger`/`js-yaml`). No se aplicó `audit fix --force` (bajaba Prisma).
 
-**npm audit:** quedan avisos high en dependencias transitivas (`prisma`/`deepmerge-ts`, `@nestjs/swagger`/`js-yaml`). No se aplicó `audit fix --force` (bajaba Prisma). No afectan el runtime del checkout; revisar en un bump de esas libs.
-
-### Web
+### Web (local)
 
 ```bash
-npm install
 cp apps/web/.env.example apps/web/.env
-# Solo VITE_API_URL (la tokenización va por el API)
-npm run dev:api   # en otra terminal, API arriba
+npm run dev:api   # otra terminal
 npm run dev:web
 ```
 
-URL local: _http://localhost:5173_
+http://localhost:5173 — listado → producto → checkout → resumen → procesamiento (polling) → resultado.
 
-Flujo: listado → producto → checkout → resumen → procesamiento (polling) → resultado.
+UI en español. Guest checkout. Refresh en el paso tarjeta: se piden de nuevo PAN/CVV (aviso de que no se guardan).
 
-### Scripts útiles
+### Scripts
 
 | Script | Descripción |
 |--------|-------------|
-| `npm run dev:api` | API en modo watch |
+| `npm run dev:api` | API watch |
 | `npm run dev:web` | Frontend Vite |
-| `npm run test:api` | Tests API |
-| `npm run test:web` | Tests web |
-| `npm run test:cov:api` | Coverage API |
-| `npm run test:cov:web` | Coverage web |
-| `npm run build:api` | Build API |
-| `npm run build:web` | Build web |
+| `npm run test:api` / `test:web` | Tests |
+| `npm run test:cov:api` / `test:cov:web` | Coverage |
+| `npm run build:api` / `build:web` | Build |
+
+### Deploy (resumen)
+
+- **Front:** `VITE_API_URL` → `npm run build -w apps/web` → subir `apps/web/dist/` a S3 → invalidar CloudFront `/*`.
+- **API:** `docker build --platform linux/amd64` → ECR → en EC2 `docker pull` + `docker run` (migrate + seed al arrancar).
+- Rama de integración: `development`. `main` es release.
 
 ---
 
 ## English
 
-npm workspaces monorepo (Phase 1): NestJS API + Vite/React web + PostgreSQL.
+Guest checkout (no login): catalog, sandbox card payment, stock reservation, and delivery. npm workspaces monorepo: NestJS API + Vite/React web + PostgreSQL.
 
-### Requirements
+### Live demo (AWS)
 
-- Node.js (npm workspaces)
-- Docker (optional, for the database)
+| What | URL |
+|------|-----|
+| Frontend | https://d302q7p7lf2y41.cloudfront.net |
+| API | https://d1aoysjwqe9rtj.cloudfront.net |
+| Health | https://d1aoysjwqe9rtj.cloudfront.net/health |
+| Swagger | https://d1aoysjwqe9rtj.cloudfront.net/docs |
+
+**Architecture:** SPA on S3 + CloudFront · Nest API (Docker) on EC2 + CloudFront (HTTPS) · RDS PostgreSQL 16.
+
+**Fees (server, COP cents):** base `500_000` ($5,000) + delivery `800_000` ($8,000).
+
+**Sandbox webhook:** `POST https://d1aoysjwqe9rtj.cloudfront.net/webhooks/payments`
+
+### Data model
+
+![Relational model](docs/modelo-relacional.png)
+
+- Available stock = `product.stock` minus `ACTIVE` reservations.
+- `PENDING` → `ACTIVE` reservation.
+- `APPROVED` → reservation `CONFIRMED` and `stock` decreases.
+- `DECLINED` / `ERROR` → reservation `RELEASED`.
+- No PAN/CVV in the database. `_prisma_migrations` is Prisma’s migration ledger.
+
+Schema: `apps/api/prisma/schema.prisma`. Seed: `apps/api/prisma/seed.ts` (`npx prisma db seed`).
+
+### Local requirements
+
+- Node.js 22 (npm workspaces)
+- Docker (optional, local Postgres)
 
 ### Environment
 
-Copy `.env.example` to `.env` and adjust as needed.
+Copy `.env.example` to `.env` and `apps/api/.env`. Web: `apps/web/.env.example` → `apps/web/.env`.
 
-**Payments (payment provider sandbox):** set `PAYMENT_API_URL` (from the challenge brief), `PAYMENT_PUBLIC_KEY`, `PAYMENT_PRIVATE_KEY`, `PAYMENT_INTEGRITY_SECRET`, and `PAYMENT_EVENTS_SECRET` (placeholders in `.env.example`). Webhook URL: `POST http://localhost:3000/webhooks/payments` (use a tunnel locally).
+| Variable | Role |
+|----------|------|
+| `DATABASE_URL` | PostgreSQL |
+| `API_PORT` / `PORT` | API port |
+| `WEB_ORIGIN` | CORS allowlist (comma-separated) |
+| `PAYMENT_*` | Sandbox keys from the challenge brief |
+| `VITE_API_URL` | Web only; baked in at **build** time |
 
-### Database
+Do not commit secrets. Do not log tokens, PAN, or CVV.
+
+### Database (local)
 
 ```bash
 docker compose up -d
@@ -97,51 +171,51 @@ docker compose up -d
 
 PostgreSQL on `localhost:5433` → container `:5432` (user/password/db: `checkout`).
 
-### API
+### API (local)
 
 ```bash
 npm install
-cp .env.example .env && cp .env apps/api/.env   # if missing
+cp .env.example .env && cp .env apps/api/.env
 docker compose up -d
-cd apps/api && npx prisma migrate dev --name init_domain && npx prisma db seed && cd ../..
+cd apps/api && npx prisma migrate deploy && npx prisma db seed && cd ../..
 npm run dev:api
 ```
 
-Health: `GET http://localhost:3000/health` → `{ "status": "ok" }`
+Health: `GET http://localhost:3000/health` → `{ "status": "ok" }`  
+Swagger: http://localhost:3000/docs
 
-Swagger: `http://localhost:3000/docs`
+Endpoints: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`, `POST /transactions/:id/pay`, `POST /payments/card-tokens`, `POST /webhooks/payments`
 
-Domain endpoints: `GET /products`, `GET /products/:id`, `POST /customers`, `POST /deliveries`, `POST /transactions`, `GET /transactions/:id`, `POST /transactions/:id/pay`, `POST /payments/card-tokens`, `POST /webhooks/payments`
+**Coverage (lines, Jest):** API **98.27%** · web **97.05%** (`npm run test:cov:api` / `test:cov:web`). Threshold: ≥85%. API: use cases, sandbox gateway, unwrap — not Prisma or `main.ts`. Web: TS modules (slice, card, api), not TSX components.
 
-**Coverage (lines, Jest):** API **98.27%** · web **97.05%** (`npm run test:cov:api` / `test:cov:web`). CI threshold: ≥85%. API measures use cases, sandbox gateway, and unwrap; not Prisma or `main.ts`. Web measures TS modules (slice, card, api), not TSX components.
+**HTTP security:** Helmet + CORS allowlist (`WEB_ORIGIN`) + CSP on the SPA `index.html` (looser in `vite dev` for HMR). HTTPS via CloudFront.
 
-**HTTP security:** Helmet + CORS allowlist (`WEB_ORIGIN` comma-separated) + CSP meta on the SPA `index.html` (looser in `vite dev` for HMR).
+**npm audit:** leftover high findings are transitive (`prisma`/`deepmerge-ts`, `@nestjs/swagger`/`js-yaml`). Did not run `audit fix --force` (it would downgrade Prisma).
 
-**npm audit:** remaining high findings are transitive (`prisma`/`deepmerge-ts`, `@nestjs/swagger`/`js-yaml`). Did not run `audit fix --force` (it would downgrade Prisma). Not in the checkout runtime path; revisit on a library bump.
-
-### Web
+### Web (local)
 
 ```bash
-npm install
 cp apps/web/.env.example apps/web/.env
-# Only VITE_API_URL is required (tokenize is proxied by the API)
-npm run dev:api   # separate terminal, API must be up
+npm run dev:api   # other terminal
 npm run dev:web
 ```
 
-Local URL: _http://localhost:5173_
+http://localhost:5173 — list → product → checkout → summary → processing (poll) → result.
 
-Flow: list → product → checkout → summary → processing (poll) → result.
+UI in Spanish. Guest checkout. Card-step refresh: PAN/CVV are requested again (they are not stored).
 
-### Useful scripts
+### Scripts
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev:api` | API watch mode |
+| `npm run dev:api` | API watch |
 | `npm run dev:web` | Vite frontend |
-| `npm run test:api` | API tests |
-| `npm run test:web` | Web tests |
-| `npm run test:cov:api` | API coverage |
-| `npm run test:cov:web` | Web coverage |
-| `npm run build:api` | Build API |
-| `npm run build:web` | Build web |
+| `npm run test:api` / `test:web` | Tests |
+| `npm run test:cov:api` / `test:cov:web` | Coverage |
+| `npm run build:api` / `build:web` | Build |
+
+### Deploy (short)
+
+- **Web:** set `VITE_API_URL` → `npm run build -w apps/web` → upload `apps/web/dist/` to S3 → CloudFront invalidation `/*`.
+- **API:** `docker build --platform linux/amd64` → ECR → on EC2 `docker pull` + `docker run` (migrate + seed on boot).
+- Integration branch: `development`. `main` is release.
