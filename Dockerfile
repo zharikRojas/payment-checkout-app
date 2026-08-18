@@ -18,8 +18,8 @@ COPY --from=build /app/package.json /app/package-lock.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/api/package.json ./apps/api/package.json
 COPY --from=build /app/apps/web/package.json ./apps/web/package.json
+COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /app/apps/api/dist ./apps/api/dist
 COPY --from=build /app/apps/api/prisma ./apps/api/prisma
 EXPOSE 3000
-# migrate then Nest; RDS must be reachable from the task
-CMD ["sh", "-c", "npm exec -w api -- prisma migrate deploy && npm exec -w api -- prisma db seed && node apps/api/dist/main"]
+CMD ["sh", "-c", "cd apps/api && ./node_modules/.bin/prisma migrate deploy && PATH=/app/node_modules/.bin:$PATH ./node_modules/.bin/prisma db seed && node dist/main"]

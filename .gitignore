@@ -23,3 +23,8 @@ AGENTS.md
 # Vite / Nest
 .vite/
 *.tsbuildinfo
+
+# Accidental tsc emit next to Prisma seed.ts (source of truth is seed.ts)
+apps/api/prisma/seed.js
+apps/api/prisma/seed.d.ts
+apps/api/prisma/seed.js.map
