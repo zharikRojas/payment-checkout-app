@@ -1,0 +1,26 @@
+---
+description: Git flow, conventional commits con aprobación, y trabajo por fases
+alwaysApply: true
+---
+
+# Git y fases
+
+## Branches
+- `main` — release only
+- `development` — integration (ALL feature PRs target this)
+- Feature branches open PRs → `development` (never direct to main during the test)
+- Feature branches: `feat/...`, `fix/...`, `chore/...`, `docs/...`, `test/...`, `security/...`
+
+## Commits
+Formato: `tipo(modulo): descripción`  
+Tipos: `feat` `fix` `docs` `test` `refactor` `chore` `security` `ci` `style` `perf`  
+Módulos: `api` `web` `db` `pay` `repo` `aws` `docs`
+
+**Nunca** hagas commit sin aprobación explícita del usuario. Usa skill `commit-gate`.
+
+## Fases
+Trabaja **solo** el alcance de la fase activa en `.cursor/sdd/03-fases.md`.  
+Al cerrar fase → PR a `development`.
+
+## Secrets
+No commits de `.env`, keys sandbox, ni `.cursor/sdd/`.

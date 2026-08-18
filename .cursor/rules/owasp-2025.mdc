@@ -1,0 +1,26 @@
+---
+description: OWASP Top 10 2025 controls for this checkout app
+globs: apps/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# OWASP Top 10:2025
+
+Fuente: https://owasp.org/Top10/2025/
+
+| ID | Riesgo | Qué hacer aquí |
+|----|--------|----------------|
+| A01 | Broken Access Control | UUIDs; sin admin público; mutaciones de stock solo en use cases |
+| A02 | Security Misconfiguration | Helmet, HTTPS, CORS allowlist, sin stacktrace en prod |
+| A03 | Software Supply Chain Failures | lockfiles; deps mínimas; `npm audit` |
+| A04 | Cryptographic Failures | TLS; secrets en env/SSM; nunca PAN/CVV |
+| A05 | Injection | Prisma parametrizado; validar DTOs |
+| A06 | Insecure Design | Fees server-side; reserva atómica; fail-closed |
+| A07 | Authentication Failures | Guest documentado; no hardcode keys |
+| A08 | Software/Data Integrity Failures | Verificar integrity/webhook; no confiar montos del cliente |
+| A09 | Logging & Alerting Failures | Logs con transactionId/resultado **sin** tarjeta |
+| A10 | Mishandling Exceptional Conditions | Timeouts; ROP; no bajar stock si el estado es dudoso |
+
+Headers mínimos: CSP, HSTS, X-Content-Type-Options, Referrer-Policy, frame denial.
+
+Detalle operativo: `.cursor/skills/owasp-top10/SKILL.md`

@@ -1,0 +1,15 @@
+{
+  "name": "payment-checkout-app",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:api": "npm run start:dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "test:api": "npm run test -w apps/api",
+    "test:web": "npm run test -w apps/web",
+    "test:cov:api": "npm run test:cov -w apps/api",
+    "test:cov:web": "npm run test:cov -w apps/web",
+    "build:api": "npm run build -w apps/api",
+    "build:web": "npm run build -w apps/web"
+  }
+}
